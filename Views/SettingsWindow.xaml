@@ -1,0 +1,569 @@
+<Window x:Class="WidgetClock.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="WidgetClock — Настройки"
+        Width="860" SizeToContent="Height"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown">
+
+    <Window.Resources>
+        <!-- Inline toggle switch -->
+        <Style x:Key="ToggleSwitch" TargetType="CheckBox">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border x:Name="track" Width="36" Height="20" CornerRadius="10"
+                                    Background="#FF2A2A4A" BorderThickness="0">
+                                <Border x:Name="thumb" Width="14" Height="14" CornerRadius="7"
+                                        Background="#FF666688" HorizontalAlignment="Left"
+                                        Margin="3,0,0,0" VerticalAlignment="Center">
+                                    <Border.RenderTransform>
+                                        <TranslateTransform x:Name="thumbTranslate" X="0"/>
+                                    </Border.RenderTransform>
+                                </Border>
+                            </Border>
+                            <ContentPresenter Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="track" Property="Background" Value="#FF6C63FF"/>
+                                <Setter TargetName="thumb" Property="Background" Value="White"/>
+                                <Setter TargetName="thumb" Property="HorizontalAlignment" Value="Right"/>
+                                <Setter TargetName="thumb" Property="Margin" Value="0,0,3,0"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Foreground" Value="#FFCCCCDD"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <!-- Compact slider -->
+        <Style x:Key="CompactSlider" TargetType="Slider">
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid VerticalAlignment="Center">
+                            <Track x:Name="PART_Track">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="Slider.DecreaseLarge" Focusable="False">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Background="#FF6C63FF" Height="3" CornerRadius="1.5"/>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="Slider.IncreaseLarge" Focusable="False">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Background="#FF2A2A4A" Height="3" CornerRadius="1.5"/>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.IncreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Width="14" Height="14">
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Ellipse Fill="White">
+                                                    <Ellipse.Effect>
+                                                        <DropShadowEffect BlurRadius="4" Opacity="0.3" ShadowDepth="1"/>
+                                                    </Ellipse.Effect>
+                                                </Ellipse>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Compact TextBox -->
+        <Style x:Key="CompactTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="#FF0D1520"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#FF2A2A4A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="CaretBrush" Value="White"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ScrollViewer x:Name="PART_ContentHost" Focusable="False"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="#FF6C63FF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Compact ComboBox -->
+        <Style x:Key="CompactComboBox" TargetType="ComboBox">
+            <Setter Property="Background" Value="#FF0D1520"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#FF2A2A4A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton Focusable="False"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          ClickMode="Press">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border Background="#FF0D1520" BorderBrush="#FF2A2A4A"
+                                                BorderThickness="1" CornerRadius="6" Padding="8,5">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition/>
+                                                    <ColumnDefinition Width="18"/>
+                                                </Grid.ColumnDefinitions>
+                                                <ContentPresenter Grid.Column="0" VerticalAlignment="Center"/>
+                                                <Path Grid.Column="1" Data="M 0 0 L 4 4 L 8 0 Z"
+                                                      Fill="#FF8888AA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter Property="BorderBrush" Value="#FF6C63FF"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter IsHitTestVisible="False"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              Margin="8,5,22,5" VerticalAlignment="Center"/>
+                            <Popup Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
+                                <Border Background="#FF16213E" BorderBrush="#FF6C63FF"
+                                        BorderThickness="1" CornerRadius="6" MaxHeight="180">
+                                    <ScrollViewer>
+                                        <StackPanel IsItemsHost="True"/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Resources>
+                <Style TargetType="ComboBoxItem">
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Padding" Value="8,5"/>
+                    <Setter Property="FontSize" Value="12"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ComboBoxItem">
+                                <Border x:Name="bg" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsHighlighted" Value="True">
+                                        <Setter TargetName="bg" Property="Background" Value="#FF6C63FF"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Style.Resources>
+        </Style>
+
+        <!-- Action button -->
+        <Style x:Key="ActionBtn" TargetType="Button">
+            <Setter Property="Background" Value="#FF6C63FF"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="18,8"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="b" Background="{TemplateBinding Background}" CornerRadius="7" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="#FF8B85FF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="b" Property="Opacity" Value="0.8"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="GhostBtn" TargetType="Button" BasedOn="{StaticResource ActionBtn}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="b" Background="{TemplateBinding Background}"
+                                BorderBrush="#FF3A3A5A" BorderThickness="1" CornerRadius="7"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="b" Property="Background" Value="#18FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Section label style -->
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#FF6C63FF"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#FF9999BB"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+
+        <Style x:Key="ValueLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#FF6C63FF"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontFamily" Value="Segoe UI Semibold"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="MinWidth" Value="32"/>
+            <Setter Property="TextAlignment" Value="Right"/>
+        </Style>
+
+        <Style x:Key="RadioBtn" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="#FFCCCCDD"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="bg" Background="Transparent" CornerRadius="6"
+                                BorderBrush="#FF2A2A4A" BorderThickness="1" Padding="10,7">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse x:Name="outer" Width="14" Height="14"
+                                         Stroke="#FF6C63FF" StrokeThickness="1.5" Fill="Transparent"
+                                         VerticalAlignment="Center" Margin="0,0,7,0"/>
+                                <Ellipse x:Name="inner" Width="6" Height="6" Fill="#FF6C63FF"
+                                         VerticalAlignment="Center" Margin="-17,0,7,0"
+                                         Visibility="Collapsed"/>
+                                <ContentPresenter VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="bg" Property="Background" Value="#151A2E6C"/>
+                                <Setter TargetName="bg" Property="BorderBrush" Value="#FF6C63FF"/>
+                                <Setter TargetName="inner" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bg" Property="Background" Value="#10FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border Background="#F21A1A2E" CornerRadius="14" BorderBrush="#28FFFFFF" BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="40" Opacity="0.6" ShadowDepth="8" Color="Black"/>
+        </Border.Effect>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- ══ HEADER ══ -->
+            <Border Grid.Row="0" Padding="22,14,16,14">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                   Foreground="#FF6C63FF" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="Настройки виджета" FontSize="15" FontWeight="SemiBold"
+                                   Foreground="White" FontFamily="Segoe UI" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <Button Content="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                            HorizontalAlignment="Right" Width="28" Height="28"
+                            Background="Transparent" Foreground="#FF666688" BorderThickness="0"
+                            Cursor="Hand" Click="Close_Click" VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+
+            <!-- ══ DIVIDER ══ -->
+            <Border Grid.Row="1" Height="1" Background="#18FFFFFF" Margin="0,0,0,0"/>
+
+            <!-- ══ THREE COLUMNS ══ -->
+            <Grid Grid.Row="2" Margin="0,0,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="1"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="1"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- ── COL 1: Время и шрифт ── -->
+                <StackPanel Grid.Column="0" Margin="20,18,16,0">
+
+                    <!-- TIME FORMAT -->
+                    <TextBlock Text="ВРЕМЯ" Style="{StaticResource SectionTitle}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <RadioButton x:Name="Radio24h" Content="24ч" GroupName="TF"
+                                     Style="{StaticResource RadioBtn}" Margin="0,0,6,0"
+                                     Checked="TimeFormat_Changed"/>
+                        <RadioButton x:Name="Radio12h" Content="12ч AM/PM" GroupName="TF"
+                                     Style="{StaticResource RadioBtn}"
+                                     Checked="TimeFormat_Changed"/>
+                    </StackPanel>
+                    <CheckBox x:Name="ShowSecondsCheck" Content="Показывать секунды"
+                              Style="{StaticResource ToggleSwitch}" Margin="0,0,0,12"
+                              Checked="Settings_Changed" Unchecked="Settings_Changed"/>
+
+                    <!-- DATE -->
+                    <TextBlock Text="ДАТА" Style="{StaticResource SectionTitle}"/>
+                    <CheckBox x:Name="ShowDateCheck" Content="Показывать дату"
+                              Style="{StaticResource ToggleSwitch}" Margin="0,0,0,8"
+                              Checked="Settings_Changed" Unchecked="Settings_Changed"/>
+                    <TextBlock Text="Формат даты" Style="{StaticResource FieldLabel}"/>
+                    <TextBox x:Name="DateFormatBox" Style="{StaticResource CompactTextBox}"
+                             Margin="0,0,0,4" TextChanged="DateFormat_Changed"/>
+                    <TextBlock x:Name="DatePreviewLabel" FontSize="11" FontFamily="Segoe UI"
+                               Foreground="#FF6C63FF" Margin="0,0,0,14"/>
+
+                    <!-- FONT -->
+                    <TextBlock Text="ШРИФТ" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Text="Семейство" Style="{StaticResource FieldLabel}"/>
+                    <ComboBox x:Name="FontFamilyCombo" Style="{StaticResource CompactComboBox}"
+                              Margin="0,0,0,10" SelectionChanged="Font_Changed"/>
+
+                    <TextBlock Text="Размер времени" Style="{StaticResource FieldLabel}"/>
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="36"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider x:Name="FontSizeSlider" Style="{StaticResource CompactSlider}"
+                                Minimum="24" Maximum="160" VerticalAlignment="Center"
+                                ValueChanged="FontSize_Changed"/>
+                        <TextBlock x:Name="FontSizeLabel" Grid.Column="1" Style="{StaticResource ValueLabel}"/>
+                    </Grid>
+
+                    <TextBlock Text="Размер даты" Style="{StaticResource FieldLabel}"/>
+                    <Grid Margin="0,0,0,18">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="36"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider x:Name="DateFontSizeSlider" Style="{StaticResource CompactSlider}"
+                                Minimum="10" Maximum="48" VerticalAlignment="Center"
+                                ValueChanged="DateFontSize_Changed"/>
+                        <TextBlock x:Name="DateFontSizeLabel" Grid.Column="1" Style="{StaticResource ValueLabel}"/>
+                    </Grid>
+
+                </StackPanel>
+
+                <!-- Vertical separator 1 -->
+                <Border Grid.Column="1" Background="#18FFFFFF"/>
+
+                <!-- ── COL 2: Цвета ── -->
+                <StackPanel Grid.Column="2" Margin="16,18,16,0">
+
+                    <TextBlock Text="ЦВЕТА" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock Text="Формат: #AARRGGBB  (AA = прозрачность 00..FF)"
+                               Foreground="#FF555577" FontSize="10" FontFamily="Segoe UI"
+                               Margin="0,0,0,10"/>
+
+                    <!-- Time color -->
+                    <TextBlock Text="Цвет времени" Style="{StaticResource FieldLabel}"/>
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="28"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="TimeColorBox" Style="{StaticResource CompactTextBox}"
+                                 TextChanged="TimeColor_Changed"/>
+                        <Border x:Name="TimeColorPreview" Grid.Column="1" Width="22" Height="22"
+                                CornerRadius="5" BorderBrush="#FF2A2A4A" BorderThickness="1"
+                                Margin="5,0,0,0" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <!-- Date color -->
+                    <TextBlock Text="Цвет даты" Style="{StaticResource FieldLabel}"/>
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="28"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="DateColorBox" Style="{StaticResource CompactTextBox}"
+                                 TextChanged="DateColor_Changed"/>
+                        <Border x:Name="DateColorPreview" Grid.Column="1" Width="22" Height="22"
+                                CornerRadius="5" BorderBrush="#FF2A2A4A" BorderThickness="1"
+                                Margin="5,0,0,0" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <!-- Background -->
+                    <TextBlock Text="Цвет фона" Style="{StaticResource FieldLabel}"/>
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="28"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="BgColorBox" Style="{StaticResource CompactTextBox}"
+                                 TextChanged="BgColor_Changed"/>
+                        <Border x:Name="BgColorPreview" Grid.Column="1" Width="22" Height="22"
+                                CornerRadius="5" BorderBrush="#FF2A2A4A" BorderThickness="1"
+                                Margin="5,0,0,0" VerticalAlignment="Center"/>
+                    </Grid>
+                    <CheckBox x:Name="ShowBgCheck" Content="Показывать фон"
+                              Style="{StaticResource ToggleSwitch}" Margin="0,6,0,14"
+                              Checked="Settings_Changed" Unchecked="Settings_Changed"/>
+
+                    <!-- Presets row -->
+                    <TextBlock Text="ПРЕСЕТЫ ЦВЕТОВ" Style="{StaticResource SectionTitle}"/>
+                    <WrapPanel Margin="0,0,0,0">
+                        <Button Style="{StaticResource GhostBtn}" Padding="8,5" Margin="0,0,5,5"
+                                Click="Preset_Dark" FontSize="11" Foreground="#FFCCCCDD">Тёмный</Button>
+                        <Button Style="{StaticResource GhostBtn}" Padding="8,5" Margin="0,0,5,5"
+                                Click="Preset_Glass" FontSize="11" Foreground="#FFCCCCDD">Стекло</Button>
+                        <Button Style="{StaticResource GhostBtn}" Padding="8,5" Margin="0,0,5,5"
+                                Click="Preset_Minimal" FontSize="11" Foreground="#FFCCCCDD">Без фона</Button>
+                        <Button Style="{StaticResource GhostBtn}" Padding="8,5" Margin="0,0,0,5"
+                                Click="Preset_White" FontSize="11" Foreground="#FFCCCCDD">Светлый</Button>
+                    </WrapPanel>
+
+                </StackPanel>
+
+                <!-- Vertical separator 2 -->
+                <Border Grid.Column="3" Background="#18FFFFFF"/>
+
+                <!-- ── COL 3: Внешний вид + Система ── -->
+                <StackPanel Grid.Column="4" Margin="16,18,20,0">
+
+                    <TextBlock Text="ВНЕШНИЙ ВИД" Style="{StaticResource SectionTitle}"/>
+
+                    <!-- Opacity -->
+                    <TextBlock Text="Прозрачность виджета" Style="{StaticResource FieldLabel}"/>
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="36"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider x:Name="OpacitySlider" Style="{StaticResource CompactSlider}"
+                                Minimum="0.1" Maximum="1.0" VerticalAlignment="Center"
+                                ValueChanged="Opacity_Changed"/>
+                        <TextBlock x:Name="OpacityLabel" Grid.Column="1" Style="{StaticResource ValueLabel}"/>
+                    </Grid>
+
+                    <!-- Corner radius -->
+                    <TextBlock Text="Скругление углов" Style="{StaticResource FieldLabel}"/>
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="36"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider x:Name="CornerSlider" Style="{StaticResource CompactSlider}"
+                                Minimum="0" Maximum="50" VerticalAlignment="Center"
+                                ValueChanged="Corner_Changed"/>
+                        <TextBlock x:Name="CornerLabel" Grid.Column="1" Style="{StaticResource ValueLabel}"/>
+                    </Grid>
+
+                    <!-- Padding -->
+                    <TextBlock Text="Отступы внутри" Style="{StaticResource FieldLabel}"/>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="36"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider x:Name="PaddingSlider" Style="{StaticResource CompactSlider}"
+                                Minimum="0" Maximum="60" VerticalAlignment="Center"
+                                ValueChanged="Padding_Changed"/>
+                        <TextBlock x:Name="PaddingLabel" Grid.Column="1" Style="{StaticResource ValueLabel}"/>
+                    </Grid>
+
+                    <CheckBox x:Name="ShowShadowCheck" Content="Тень"
+                              Style="{StaticResource ToggleSwitch}" Margin="0,0,0,6"
+                              Checked="Settings_Changed" Unchecked="Settings_Changed"/>
+
+                    <!-- SYSTEM -->
+                    <TextBlock Text="СИСТЕМА" Style="{StaticResource SectionTitle}" Margin="0,14,0,8"/>
+
+                    <CheckBox x:Name="AlwaysOnTopCheck" Content="Поверх всех окон"
+                              Style="{StaticResource ToggleSwitch}" Margin="0,0,0,6"
+                              Checked="System_Changed" Unchecked="System_Changed"/>
+                    <CheckBox x:Name="RunAtStartupCheck" Content="Запуск вместе с Windows"
+                              Style="{StaticResource ToggleSwitch}" Margin="0,0,0,6"
+                              Checked="System_Changed" Unchecked="System_Changed"/>
+                    <CheckBox x:Name="ShowInTaskbarCheck" Content="Показывать в панели задач"
+                              Style="{StaticResource ToggleSwitch}" Margin="0,0,0,14"
+                              Checked="System_Changed" Unchecked="System_Changed"/>
+
+                </StackPanel>
+            </Grid>
+
+            <!-- ══ FOOTER ══ -->
+            <Border Grid.Row="3" Height="1" Background="#18FFFFFF"/>
+            <Border Grid.Row="4" Padding="20,12">
+                <Grid>
+                    <Button Content="Сбросить" HorizontalAlignment="Left"
+                            Style="{StaticResource GhostBtn}" Click="Reset_Click"
+                            Foreground="#FF888899"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Отмена" Margin="0,0,8,0"
+                                Style="{StaticResource GhostBtn}" Click="Cancel_Click"
+                                Foreground="#FFCCCCDD"/>
+                        <Button Content="Применить и закрыть"
+                                Style="{StaticResource ActionBtn}" Click="Apply_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+        </Grid>
+    </Border>
+</Window>
