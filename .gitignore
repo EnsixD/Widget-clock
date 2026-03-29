@@ -1,0 +1,17 @@
+# Build output
+bin/
+obj/
+
+# Publish output
+publish/
+
+# User-specific files
+*.user
+*.suo
+.vs/
+
+# Rider / JetBrains
+.idea/
+
+# Settings (optional — remove this line if you want to track default settings)
+# %AppData%\WidgetClock\ is outside the repo, so nothing to ignore there
